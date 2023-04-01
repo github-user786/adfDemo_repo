@@ -1,0 +1,65 @@
+{
+	"name": "Appendvariabledemo",
+	"properties": {
+		"activities": [
+			{
+				"name": "Appendvariable1",
+				"type": "AppendVariable",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "array1",
+					"value": {
+						"value": "@pipeline().parameters.Filename",
+						"type": "Expression"
+					}
+				}
+			},
+			{
+				"name": "FilterArray",
+				"type": "Filter",
+				"dependsOn": [
+					{
+						"activity": "Appendvariable1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@variables('array1')",
+						"type": "Expression"
+					},
+					"condition": {
+						"value": "@equals(true, contains(variables('array1'), 'file4'))",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"Filename": {
+				"type": "string",
+				"defaultValue": "file4"
+			}
+		},
+		"variables": {
+			"array1": {
+				"type": "Array",
+				"defaultValue": [
+					"file1",
+					"file2",
+					"file3"
+				]
+			}
+		},
+		"folder": {
+			"name": "myActivityDemo"
+		},
+		"annotations": [],
+		"lastPublishTime": "2023-03-16T12:53:31Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

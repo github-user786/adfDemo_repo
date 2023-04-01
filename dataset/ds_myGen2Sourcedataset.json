@@ -1,0 +1,45 @@
+{
+	"name": "ds_myGen2Sourcedataset",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_myGen2Sourcelinkedservice",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "MyDemodatasets"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "empdata.csv",
+				"folderPath": "Sales/employeedata",
+				"fileSystem": "testcontainer"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "name",
+				"type": "String"
+			},
+			{
+				"name": "age",
+				"type": "String"
+			},
+			{
+				"name": "address",
+				"type": "String"
+			},
+			{
+				"name": "phone_numbers",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
