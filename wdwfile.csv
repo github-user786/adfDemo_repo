@@ -1,0 +1,22 @@
+sold,city,month
+100,London,1
+400,London,2
+
+300,Paris,1
+500,Paris,2
+
+
+200,Rome,1
+300,Rome,2
+400,Rome,3
+
+
+Rome 1 200
+Rome 2 300 
+Rome 3 400 
+Rome 4 200 
+Rome 4 100
+Rome 5 300 
+Rome 5 100
+Rome 5 100
+Rome 6 400 

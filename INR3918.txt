@@ -1,0 +1,138 @@
+Program INR3527 calls INR3918 to parse KIOSK-OMS order details and write order details to work files.
+Start:
+1) Program INR3918(KIOSK-OMS Sales order parser)  receives three entry parameter inSourcePath,inSourceSize,inSourceType
+2)Program calls getEmailAttr procedure to get email attributes. In Procedure,
+Chain INEMSGP using program name ,Kiosk_Order
+ chain ( keyINEMSGP.EMMKEY: keyINEMSGP.EMMKEY2 ) INEMSGR;   
+ IF NOT %found                           
+  or EMUSER = *BLANKS;                   
+   Set emailAddress = 'opsx@costco.com';        
+ ELSE;                                   
+   Set emailAddress = %trim(EMUSER);         
+ ENDIF; 
+Build Jobname, emailmsg command, job log print command and email receipt command using required variables.
+3)IF inSourceType = S/F
+     Set parsingStatus = *OFF;         
+     Set parsingStatus = parseXMLdoc(); 
+     IF parsingStatus                
+        and inSourceType = 'F';   
+        Call procedure  performPostParsing();
+           // check for exit program request.                  
+      IF ODSTATUS = PARSED                                
+       and exitPgmName <> STAR_NONE;                      
+        procExitPgm();                                    
+      ENDIF;                                              
+      ENDIF                                                    
+    ENDIF;                                                
+                                                          
+    // error or no error, locked or not locked, unlock fil
+    unlock(e) INODTRXP;                                   
+ else
+ Logic to handle error messages  
+End 
+4) Call procedure "parseXMLdoc" to parse XML document,
+	Monitor:
+		XML-SAX initiates a SAX parse for an XML document 
+	on-error XML_PARSING_ERROR
+		if SAXinfo.stopSAX;                  
+			if SAXinfo.stopReason = ORD_TYP_ERR
+				Send email message i.e. 'programName' - **ERROR** Unable to parse documents with order type: 'SAXinfo.xODORDTYPE'. Document: 'inSourcePath:inSourceSize'. Request was not processed.            
+			elseif SAXinfo.stopReason = ORD_DOC_ERR	
+				Send email message i.e. 'programName' - **ERROR** Unable to parse documents with order type: 'SAXinfo.xODORDTYPE' and document type: 'SAXinfo.xODDOCTYPE. Document: 'inSourcePath:inSourceSize. Request was not processed.
+			elseif SAXinfo.stopReason = INV_TRX_STS			
+				Send email message i.e. 'programName'- **ERROR** Unable to lock INODTRXP record for parsing.Record status may not be in MQGET state. Record status: 'ODSTATUS'. Document: 'inSourcePath:inSourceSize'. Request was not processed.
+			endif	
+		else	
+			  Send email message i.e. 'programName'- **ERROR** XML parsing error occurred. Document: 'inSourcePath:inSourceSize'. Program error message ID: 'jobMsgID'. Program error message text: 'jobMsgText' SAX return code: xmlReturnCode. Check work files for partial parsing. Request was not fully processed. Joblog is printed to spool file. See program dump for more information.                      
+		endif
+	on-error; 
+		Send email message i.e. 'programName' - **ERROR** Parser encountered severe error. Document: 'inSourcePath:inSourceSize'. Program error message ID: 'jobMsgID'. Program error message text: 'jobMsgText' Check work files for partial parsing. Request was not fully processed. Joblog is printed to spool file. See program dump for more information.                      
+	endmon
+	As well as for all the errors print and send job log to support distribution list and return the parsingStatus. 
+5) Call procedure "getIFSdocAttr" and get IFS archive attributes from INTBLDP. 
+	Retrieve the record using thisPgmName:ifsPathType:ifsDocType 
+	if NOT %found
+		Set the default IFS archive attributes and send email message i.e 'programName' **WARNING** Unable to get archive attributes from INTBLDP file. Default IFS order detail archive attributes are used.Path: 'ARCHIVE_PATH' . Archive extension: 'ARCHIVE_EXT' . Exit program name:STAR_NONE               
+		As well as print and send job log to support distribution list. 
+	else
+		archive IFS path.
+	endif
+6) Call procedure "splitPathNames" and split inSourcePath path to its component. 
+   
+7) When renaming of document is not successful, check for object if it is already exists. 
+	if present remove the link using procedure "removeLink" and rename the object. 
+	if returnError and CPFMSG = 'CPFA0A0'
+	* Call procedure "removeLink" , to remove the link
+		if system(cmdString) = *ZERO;                          
+			link removed successfully.  
+		else                                                  
+			error removing link. 
+			Send email message i.e. 'programName' - **ERROR** Unable to remove object link: 'objectPath'. System error message ID: 'CPFMSG'               
+		endif
+	* Call Procedure "renameDoc" to rename xml document in place with archive extension.
+		if system(cmdString) = *ZERO                            
+			object renamed successfully.  
+		else	                                                   
+			error renaming object. 
+			 'programName' - **ERROR** Unable to rename object from current name: 'fromObjPath' to new name: 'toObjName'. System error message ID: 'CPFMSG'                     
+		endif
+		return with "renameStatus".       
+		if NOT returnError;
+			Send email message i.e. 'programName'- **INFORMATIONAL** Current object link: "dirPath" "arcDocName" is removed. Object: "xmlDocPath" is renamed to new name: 'arcDocName' successfully. 
+		endif
+	endif
+	
+8) Build archive document's full source-path name. renamed path will be moved to archive folder.
+   Build archive document's full destination path name. this full path, includes warehouse sub-directory level and document type sub-directory lower level        
+   
+9) Call procedure "archiveDoc" to move archive document to archive folder. First it will validate warehouse directory existence attempt to change directory check for error, create directory.
+   if rc < *ZERO;                            
+		pErrno = sysErrno();                    
+		errorMsg = %str(strerror(errno));       
+		rc = mkdir(%trim(whsArcPath) : dmode);  
+		if rc < *ZERO;                          
+			Send email message i.e. 'programName' **ERROR** Archive directory: 'whsArcPath' for warehouse: "SAXinfo.xODORGCODE" cannot be created. Error message: 'errorMsg'. As well as print and send job log to support distribution list.             
+		else 
+			Send email message i.e. 'programName' - **INFORMATIONAL** Archive directory: 'whsArcPath' for warehouse: 'SAXinfo.xODORGCODE' was not found, directory created. As well as print and send job log to support distribution list.                     
+			Call procedure "changeAut' and  'changeOwn' to change ojbect Authority and owner 
+		endif
+	endif	
+	if rc < *ZERO;                                
+		pErrno = sysErrno();                        
+		errorMsg = %str(strerror(errno));           
+		rc = mkdir(%trim(docTypeArcPath) : dmode);  
+		if rc < *ZERO;  
+		Send email message i.e. 'programName' - **ERROR** Archive directory: 'docTypeArcPath' for warehouse: "SAXinfo.xODORGCODE' document type: "SAXinfo.xODDOCTYPE" cannot be created.  Error message: "errorMsg"
+		else
+		Send email message i.e. 'programName' - **INFORMATIONAL** Archive directory: "docTypeArcPath"  for warehouse: "SAXinfo.xODORGCODE" document type: "SAXinfo.xODDOCTYPE" was not found, directory created.                     
+		endif
+	endif
+	* Move object
+	if system(cmdString) = *ZERO;                       
+		object moved successfully. 
+	else                                               
+		error moving object.		
+		'programName' - **ERROR** Unable to move object from current path: "fromObjPath" to new path: "toObjPath". System error message ID: 'CPFMSG'                            
+    endif
+	return movestatus		                       
+	
+10)First check for destination object if already exists and attempt removing link and try again.
+	if NOT returnError
+		Send email message i.e. 'programName'- **INFORMATIONAL** Current object link: 'arcDocPath' is removed.Object moved from current path: 'renDocPath' to new path:'arcDocPath' successfully.
+	endif
+11) Record is already locked by procedure "vldRecStatus",  update Order document transaction file.   
+12) Call the procedure "procExitPgm" to exit the program. 
+	if %error
+		Send an email message i.e. 'programName'- **ERROR** Error calling exit program 'exitPgmName'. Error message ID: 'jobMsgID'. Error message text: 'jobMsgText' Check /EP option value in INTBLDP control record. Correct option value  or resolve encountered error message. job continues processing.                    and exit the program      
+	Endif
+	if outMessageId =*blanks
+		Retrieve the record based on warehouse and order number from the file INODTRX30. if record found update the record for the field ODSTATUS(Document Status ),ODACTNPGM(Document Action program),  ODPRCSTMP(Document Process time stamp) in the file INODTRX30 and exit
+	endif
+	
+13) Procedure "SAXhandler" KIOSK-OMS order handler. several XML events is passed to XML-SAX handling procedure "SAXhandler" to identify the events within the procedure, such as *XML_START_DOCUMENT, *XML_START_ELEMENT,*XML_END_ELEMENT etc.. and assign the value to the work variables accordingly.
+    process the following events inthe XML (i.e.inSourcePath). 
+	*XML_START_DOCUMENT, *XML_START_ELEMENT,*XML_END_ELEMENT,*XML_CHARS,*XML_PREDEF_REF,*XML_UCS2_REF.
+	in the events XML_START_ELEMENT,*XML_CHARS,*XML_PREDEF_REF,*XML_UCS2_REF, the program populate the values in two arrays
+	stackvalue,stackname (i.e. building key value pair).
+	in the event *XML_END_ELEMENT , the program process these two array and populate the details to the file dsINOMSHP,dsINOMSDP,dsINOMSTP ,dsINOMSSP
+
