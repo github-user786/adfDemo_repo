@@ -1,0 +1,127 @@
+
+
+Question 1:How do you handle Bad records in Databricks?
+
+There are two ways to handle errors in Databricks,
+
+1. MODE
+
+a. Permissive (error values will be stored as null and entire error row will be saved as a column)
+b. Dropmalformed (whole record that has error values will get dropped off) 
+c. Failfast (when error is recognized execution stops)
+
+2. BAD RECORD PATH (re-directs values to separate file)
+
+Question 2: How do you configure number of cores in Worker?
+
+Number of cores ~ No of partitions
+
+
+Question 3: What is managed/un-managed table in data bricks ?
+
+Every Spark SQL table has metadata information that stores the schema and the data itself.
+
+• Managed table
+
+A managed table is a Spark SQL table for which Spark manages both the data and the metadata. In the case of managed table, Databricks stores the metadata and data in DBFS in your account.
+
+Since Spark SQL manages the tables, doing a DROP TABLE example_data deletes both the metadata and
+
+data.
+
+• Un-Managed table
+
+Spark SQL manage the metadata, while you control the data location.
+
+Spark SQL manages the relevant metadata, so when you perform DROP TABLE, Spark removes only the metadata and not the data itself. The data is still present in the path you provided.
+
+
+Question 4: What is Auto scaling in Data bricks Cluster ?
+
+When you provide a fixed size cluster, Databricks ensures that your cluster has the specified number of workers.
+
+When you provide a range for the number of workers, Databricks chooses the appropriate number of workers required to run your job. This is referred to as autoscaling.
+
+
+Question 5 : What do you mean by Interactive and Job Cluster?
+
+• Interactive cluster: Any cluster created through cluster Ul or "create cluster" API.
+
+• Job cluster: Any cluster created from a job (Jobs UI or Jobs API)
+
+Interactive clusters are much more expensive per DBU than Automated clusters.
+
+• Fine-grained sharing for maximum resource utilization/minimum query latency
+
+• Fault isolation between users
+
+• Query Watchdog prevents heavy queries taking over the cluster. In summary: Great for many users on the same cluster.
+
+• Typical use case: Many analysts sharing one cluster when doing interactive analysis.
+
+
+
+Question 6: What are SQL end points? How are they different from clusters
+
+SQL queries run on fully managed SQL endpoints sized according to query latency and number of concurrent users.
+
+To help you get started quickly, every workspace comes with pre-configured with a small starter SQL endpoint.
+
+
+Question 7: Have you worked on data bricks SQL? What is it about?
+
+Data bricks SQL provides a simple experience for SQL users who want to run quick ad-hoc queries on their data lake, create multiple visualization types to explore query results from different perspectives, and build and share dashboards.
+
+
+Question 8: What are the default number of partitions?
+
+Default 200 shuffle partitions
+
+
+Question 9: What is the default partition size?
+
+Spark by default creates 1 partition for every 128 MB of the file.
+
+So, if you are reading a file of size 2GB, it creates 20 partitions.
+
+spark.conf.get("spark.sql.files.maxPartitionBytes")
+
+Out[7]: 134217728b'
+
+
+Question 10:  What is the difference between 'from pyspark.sql.types import pyspark.sql.types import xyz' ? and 'from
+
+Performance
+
+
+Question 11: If we have .gz files, how are they distributed in spark?
+
+No, it will be single threaded.
+
+
+Question 12:  How do you choose cluster configuration?
+
+For normal ETL/ELT work - Memory Optimized
+Quick Dev task - General Purpose 
+For shuffle intensive work Storage Optimized
+
+How to move a file from one location to another location
+dbutils.fs.mv("file:/tmp/abc.txt","dbfs:/tmp/abc.txt")
+
+tell any exception error you have faced
+
+Indexerror, Valueerror, OSerror, Divisionbyzero, 
+
+print(a.capitalize()) - To make first letter of the word capital and rest small case
+
+print(s.rjust(7))
+# Center a string, padding with spaces; prints " hello "
+print(s.center(7)) 
+# Replace all instances of one substring with another; # prints "he(ell)(ell)o"
+print(s.replace('l', '(ell)'))  
+                                
+# Strip leading and trailing whitespace; prints "world"
+print('  world '.strip())  
+
+elif isinstance(i,float): or elif type(j)==float:
+
