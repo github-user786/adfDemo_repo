@@ -91,8 +91,12 @@
 									"referenceName": "ds_sourceSQLtables",
 									"type": "DatasetReference",
 									"parameters": {
-										"table": {
-											"value": "@item().name",
+										"TABLE_SCHEMA": {
+											"value": "@item().TABLE_SCHEMA",
+											"type": "Expression"
+										},
+										"TABLE_NAME": {
+											"value": "@item().TABLE_NAME",
 											"type": "Expression"
 										}
 									}
