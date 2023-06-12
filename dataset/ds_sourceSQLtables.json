@@ -1,0 +1,17 @@
+{
+	"name": "ds_sourceSQLtables",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sinkSql",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"table": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": []
+	}
+}

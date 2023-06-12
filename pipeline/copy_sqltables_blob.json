@@ -88,8 +88,14 @@
 							},
 							"inputs": [
 								{
-									"referenceName": "ds_sqltables",
-									"type": "DatasetReference"
+									"referenceName": "ds_sourceSQLtables",
+									"type": "DatasetReference",
+									"parameters": {
+										"table": {
+											"value": "@item().name",
+											"type": "Expression"
+										}
+									}
 								}
 							],
 							"outputs": [
