@@ -1,0 +1,23 @@
+{
+	"name": "ds_sinkSqltables",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sinksqltables",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "alltables",
+				"fileSystem": "sqldatabasefiles"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	}
+}
